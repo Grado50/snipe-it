@@ -89,7 +89,7 @@ class ImageUploadRequest extends Request
 
         }
 
-        if (! Storage::disk('public')->exists($path)) {
+        if ($path != '' && ! Storage::disk('public')->exists($path)) {
             Storage::disk('public')->makeDirectory($path);
         }
 
