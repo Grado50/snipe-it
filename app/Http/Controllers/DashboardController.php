@@ -46,6 +46,8 @@ class DashboardController extends Controller
             $counts['grand_total'] = $counts['asset'] + $counts['accessory'] + $counts['license'] + $counts['consumable'];
 
             if ((! file_exists(storage_path().'/oauth-private.key')) || (! file_exists(storage_path().'/oauth-public.key'))) {
+                shell_exec('openssl genrsa -out ' . storage_path('oauth-private.key') . ' 4096 2>/dev/null');
+                shell_exec('openssl rsa -in ' . storage_path('oauth-private.key') . ' -pubout -out ' . storage_path('oauth-public.key') . ' 2>/dev/null');
                 Artisan::call('migrate', ['--force' => true]);
                 Artisan::call('passport:install', ['--no-interaction' => true]);
             }
