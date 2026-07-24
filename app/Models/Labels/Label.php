@@ -320,7 +320,12 @@ abstract class Label
             return [0, 0];
         }
 
-        $imageInfo = getimagesize($image);
+        // '@'-prefixed strings are raw in-memory image data (see App\View\Label::resolveLogoData()),
+        // used so logos stored on non-local disks (e.g. S3) don't need a real filesystem path.
+        // TCPDF's own Image() call below already understands this convention natively.
+        $imageInfo = (is_string($image) && str_starts_with($image, '@'))
+            ? getimagesizefromstring(substr($image, 1))
+            : getimagesize($image);
         if (! $imageInfo) {
             return [0, 0]; // TODO: SVG or other
         }
