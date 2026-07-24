@@ -107,10 +107,10 @@ class Label implements View
                     $logo = null;
                     // Should we use the assets assigned company logo? (A.K.A. "Is `Labels > Use Asset Logo` enabled?"), and do we have a company logo?
                     if ($settings->label2_asset_logo && $asset->company && $asset->company->image != '') {
-                        $logo = Storage::disk('public')->path('companies/'.e($asset->company->image));
+                        $logo = self::resolveLogoData('companies/'.e($asset->company->image));
                     } elseif (! empty($settings->label_logo)) {
                         // Use the general site label logo, if available
-                        $logo = Storage::disk('public')->path('/'.e(basename($settings->label_logo)));
+                        $logo = self::resolveLogoData('/'.e(basename($settings->label_logo)));
                     } elseif (! empty($asset->is_label_preview)) {
                         $logo = public_path('img/label-preview-logo.png');
                     }
@@ -245,6 +245,24 @@ class Label implements View
 
         $filename = $assets->count() > 1 ? 'assets.pdf' : $assets->first()->asset_tag.'.pdf';
         $pdf->Output($filename, $this->destination);
+    }
+
+    /**
+     * Reads a logo image off the 'public' disk as raw bytes (prefixed with '@' for
+     * TCPDF/getimagesize consumption), instead of Storage::disk('public')->path(),
+     * which only resolves to a real filesystem path on local disks and breaks
+     * silently when 'public' is backed by a remote driver (e.g. S3).
+     *
+     * @param  string  $path
+     * @return string|null
+     */
+    private static function resolveLogoData($path)
+    {
+        if (! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return '@'.Storage::disk('public')->get($path);
     }
 
     /**
